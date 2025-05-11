@@ -36,13 +36,13 @@ class KandinskyGenTask:
         self.logger.info("Kandinsky task inited. Start pipeline getter")
 
 
-    async def set_pipeline(self) -> None:
+    async def __set_pipeline(self) -> None:
         async with aiohttp.ClientSession() as session:
             async with session.get(self.URL + 'key/api/v1/pipelines', headers=self.AUTH_HEADERS) as response:
                 self.pipeline = (await response.json())[0]['id']
                 self.logger.info(f"Pipeline {self.pipeline} getted from API")
 
-    async def start_file_generation(self) -> None:
+    async def __start_file_generation(self) -> None:
         request_data = aiohttp.FormData()
         request_data.add_field('pipeline_id', self.pipeline)
         request_data.add_field('params',
@@ -56,7 +56,7 @@ class KandinskyGenTask:
                 self.image_id = (await response.json())['uuid']
 
 
-    async def get_result(self) -> Image or int: # Вернет None, если генерация не завершена
+    async def __get_result(self) -> Image or int: # Вернет None, если генерация не завершена
         if self.image_id is None:
             self.logger.warning("Start image generation first!!!")
             return 0
@@ -75,20 +75,21 @@ class KandinskyGenTask:
                     img_pil = Image.open(buffer)
                     return img_pil
 
+    async def generate_image(self) -> Image:
+        self.logger.info(f"Start generate image")
+        await self.__set_pipeline()
+        await self.__start_file_generation()
+        await self.__start_file_generation()
+        result = await self.__get_result()
+        while result == 0:
+            result = await self.__get_result()
+            await asyncio.sleep(2)
+        return result
 
 
 async def main():
-    logging.info("start KandinskyGenTask gen test")
     generation_task = KandinskyGenTask("реалистичный кадр, рассветные лучи освещают заснеженное поле, силуэт советского солдата уходит в туман навстречу бою, камера позади, на заднем плане едва различимы фигуры других бойцов, небо в розово‑серых оттенках, кадр наполнен тихой трагичностью и надеждой, без флагов")
-    await generation_task.set_pipeline()
-    await generation_task.start_file_generation()
-    print(generation_task.image_id)
-    result = await generation_task.get_result()
-    print(result)
-    while result == 0:
-        result = await generation_task.get_result()
-        await asyncio.sleep(2)
-
+    result = await generation_task.generate_image()
     result.show()
 
 
