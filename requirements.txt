@@ -1,2 +1,4 @@
 openai
 Pillow
+python-dotenv
+aiohttp

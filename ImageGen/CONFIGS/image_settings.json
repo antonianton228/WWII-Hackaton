@@ -1,0 +1,9 @@
+{
+  "type": "GENERATE",
+  "numImages": 1,
+  "width": 1000,
+  "height": 1000,
+  "generateParams": {
+    "query": ""
+  }
+}
