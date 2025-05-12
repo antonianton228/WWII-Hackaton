@@ -3,24 +3,22 @@ import time
 
 from ImageGen.StaticImageGenerator import StaticImageGenerator
 from SpeechGenerator.SpeechGenerator import SpeechGenerator
+from TextGenerator.TextGenerator import TextGenerator
+from pprint import pprint
 
 
 async def main():
+    geminuRequester = TextGenerator()
+    await geminuRequester.start_xray_proxy()
+    letter = open("example_letter.txt", "r", encoding="utf-8").read()
+    genemi_result = await geminuRequester.analyze_letter(letter)
+    pprint(genemi_result)
     ## Здесь кусок кода, который генерит текст, на выходе получим следующий словарь
-    genemi_result = {
-        "sex": 1,
-        "cadres": [
-            "Солдат готовится к бою",
-            "Солдат пишет пиьмо",
-            "Солдаты воюют",
-            "СССР победило германию"
-        ],
-        "original_text": '''Здравствуйте, мои дорогие мама, бабушка, Нина, Юра, Ольга. Шлю вам горячий привет и желаю самых лучших успехов в вашей жизни. Мама, это письмо пишу перед боем. Через полтора часа иду в бой, вернусь или нет, не знаю, поэтому решил написать. Может быть, это письмо последнее. А вот жить хочется, хочется дышать, хочется посмотреть на вас хотя бы одним глазом. Сегодня вступил в ряды ВКП(Б) и пойду в бой коммунистом, и если погибну, то считайте, что был коммунист. До рассвета осталось совсем немного времени, и вот в голову залазят всякие мысли. И жить хочется, ведь вы сами знаете, как я провел свою юность, остальное время… и все же жить хочется. Но жить под ярмом немцев не хочу, так лучше погибнуть. Писать больше времени нет. До свидания, дорогие родители! Крепко, крепко целую руки, 24 января 1943 года'''
-    }
+
 
     ## Тут второй метод (в FastApi) для генерации картинок
     image_generator = StaticImageGenerator()
-    for prompt in genemi_result["cadres"]:
+    for prompt in genemi_result["frames"]:
         image_generator.add_prompt(prompt)
     await image_generator.start_image_generations()
     ## Тут мы заканчиваем метод, после этого раз в какое-то время фронт будет стучаться и справшивать, готова ли генерация. Тут симуляция этого стука))

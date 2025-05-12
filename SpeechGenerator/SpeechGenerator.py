@@ -10,7 +10,7 @@ logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
 class SpeechGenerator:
     def __init__(self, speech_text: str, sex: int):
         self.speech_text = speech_text
-        self.speaker_voice = "jane" if sex == 0 else "ermil"
+        self.speaker_voice = "jane" if sex == 1 else "ermil"
         self.logger = logging.getLogger("SpeechGenerationMain")
         self.oauth_session = Session.from_yandex_passport_oauth_token(os.getenv("YANDEX_OATH_TOKEN"),
                                                                       os.getenv("YANDEX_CATALOG_ID"))
