@@ -1,3 +1,4 @@
+protobuf==3.20.3
 openai
 Pillow
 python-dotenv
@@ -9,3 +10,5 @@ google
 google-api-core
 google-generativeai
 pysocks
+speechkit
+python-dotenv

@@ -17,14 +17,17 @@ class KandinskyGenTask:
     def __init__(self, prompt: str):
         self.URL = "https://api-key.fusionbrain.ai/"
 
-        self.logger = logging.getLogger(__name__)  # Логгер
+        self.logger = logging.getLogger("KandinskyGenerationTask")  # Логгер
 
-        self.image_params = json.loads(open("CONFIGS/image_settings.json", encoding="utf-8").read())
+        self.image_params = json.loads(open("ImageGen/CONFIGS/image_settings.json", encoding="utf-8").read())
         self.image_params["generateParams"]["query"] += prompt
 
         self.pipeline: str|None = None
 
         self.image_id = None
+
+        self.__result_image = None
+        self.__is_ready = False
 
         self.AUTH_HEADERS = {
             'X-Key': f'Key {os.getenv("KANDINSKY_API")}',
@@ -35,6 +38,12 @@ class KandinskyGenTask:
 
         self.logger.info("Kandinsky task inited. Start pipeline getter")
 
+    def get_image(self) -> Image:
+        return self.result_image
+
+    async def is_ready(self) -> bool:
+        await self.__get_result()
+        return self.__is_ready
 
     async def __set_pipeline(self) -> None:
         async with aiohttp.ClientSession() as session:
@@ -56,35 +65,32 @@ class KandinskyGenTask:
                 self.image_id = (await response.json())['uuid']
 
 
-    async def __get_result(self) -> Image or int: # Вернет None, если генерация не завершена
+    async def __get_result(self): # Вернет None, если генерация не завершена
         if self.image_id is None:
             self.logger.warning("Start image generation first!!!")
-            return 0
+            return
         self.logger.info("Status getting task started")
         async with aiohttp.ClientSession() as session:
             async with session.get(self.URL + 'key/api/v1/pipeline/status/' + self.image_id, headers=self.AUTH_HEADERS) as response:
                 data = await response.json()
                 if data['status'] == 'INITIAL' or data['status'] == 'PROCESSING':
                     self.logger.info(f"Current status of task is {data['status']}")
-                    return 0
+                    return
                 elif data['status'] == 'DONE':
                     self.logger.info(f"File generated")
                     base_64_coded_file = data['result']['files'][0]
                     base_64_coded_file = base64.b64decode(base_64_coded_file)
                     buffer = io.BytesIO(base_64_coded_file)
                     img_pil = Image.open(buffer)
-                    return img_pil
+                    self.result_image = img_pil
+                    self.__is_ready = True
 
-    async def generate_image(self) -> Image:
+    async def generate_image(self):
         self.logger.info(f"Start generate image")
         await self.__set_pipeline()
         await self.__start_file_generation()
-        await self.__start_file_generation()
-        result = await self.__get_result()
-        while result == 0:
-            result = await self.__get_result()
-            await asyncio.sleep(2)
-        return result
+        await self.__get_result()
+
 
 
 async def main():

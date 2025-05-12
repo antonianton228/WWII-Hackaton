@@ -1,9 +1,13 @@
+import os
+
 import requests
 from pprint import pprint
 import json
 import subprocess
 from pathlib import Path
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 def start_xray_with_config():
     subprocess.Popen(["xray", "run", "-c", 'proxy_config.json'])
@@ -17,11 +21,11 @@ proxies = {
 }
 
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-params = {"key": "api"}
+params = {"key": os.getenv("GENIMY_API")}
 payload = {
     "contents": [{
         "parts": [{
-            "text": "Ты гей?"
+            "text": "Что ты умеешь? Распиши все возможности"
         }]
     }]
 }
