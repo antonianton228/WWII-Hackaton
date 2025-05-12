@@ -45,7 +45,7 @@ class StaticImageGenerator:
         self.logger.info(f"Start async generate task with prompt {self.__prompt_strings[prompt_id]}")
         kandinsky_task = KandinskyGenTask(self.__prompt_strings[prompt_id])
         result = await kandinsky_task.generate_image()
-        result.show()
+        self.__ready_images.append(result)
         return True
 
     async def __run_generations(self):
@@ -54,19 +54,24 @@ class StaticImageGenerator:
             coroutines.append(self.__generate_one_img(prompt))
         await asyncio.gather(*coroutines)
 
-    def start_image_generations(self):
+    def start_image_generations(self) -> list[Image]:
         asyncio.run(self.__run_generations())
         self.logger.info("End of generation")
+        return self.__ready_images
 
 
 
 if __name__ == "__main__":
-    start_time = time.time()
     generator = StaticImageGenerator()
-    generator.add_prompt("Молодой солдат в темной землянке при свете коптилки пишет письмо домой. На его лице смесь решимости и тоски, в глазах отблеск пламени. На столе лежит партбилет ВКП(Б), винтовка прислонена к бревенчатой стене. За окном зимняя ночь, видны вспышки далекого боя. Стиль: драматичная военная живопись, темные тона с контрастом огня и теней")
-    generator.add_prompt("Видение солдата: его мать, бабушка, Нина, Юра и Ольга стоят в солнечной комнате довоенного дома. Они улыбаются, но их образы полупрозрачны, как мираж. На переднем плане — сам боец в каске, его лицо в тени, а вокруг него уже не дом, а снежное поле с разрывами снарядов. Стиль: сюрреалистичное смешение прошлого и настоящего, теплые и холодные цвета в контрасте.")
-    generator.add_prompt("Рассвет над окопами, алый свет зари окрашивает снег. Солдат сжимает винтовку, на его шинели — значок ВКП(Б). Рядом товарищи готовятся к атаке, лица напряжены. Вдали дым и огонь боя. На лице главного героя — последняя мысль о доме перед рывком. Стиль: динамичная батальная сцена в духе советского военного плаката, резкие тени, кроваво-красное небо.")
-    generator.add_prompt('Крупный план рук солдата, крепко сжимающих карандаш и листок с недописанными словами. Второй лист уже вложен в конверт с надписью «Моей семье». На заднем плане — звук сирены, бойцы поднимаются в атаку. В глазах солдата — слеза, но губы сжаты в решимости. Стиль: эмоциональный гиперреализм, акцент на деталях: дрожь руки, помятая бумага, тусклый свет утра.')
-    generator.add_prompt('Альтернативная реальность (метафора жертвы)')
-    generator.start_image_generations()
-    print(f"time = {time.time() - start_time}")
+    generator.add_prompt('Письмо перед боем.')
+    generator.add_prompt('Через полтора часа бой, неизвестно, вернется ли.')
+    generator.add_prompt('Письмо может быть последним.')
+    generator.add_prompt('Желание жить.')
+    generator.add_prompt('Вступил в ряды ВКП(Б).')
+    generator.add_prompt('Пойдет в бой коммунистом.')
+    generator.add_prompt('Жить под ярмом немцев не хочет, лучше погибнуть.')
+    generator.add_prompt('Прощание.')
+    generator.add_prompt('24 января 1943 года.')
+    result = generator.start_image_generations()
+    for img in result:
+        img.show()

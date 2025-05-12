@@ -30,7 +30,7 @@ class KandinskyGenTask:
             'X-Key': f'Key {os.getenv("KANDINSKY_API")}',
             'X-Secret': f'Secret {os.getenv("KANDINSKY_SECRET")}',
         }
-        if os.getenv("KANDINSKY_API") == None or os.getenv("KANDINSKY_SECRET") == None:
+        if os.getenv("KANDINSKY_API") is None or os.getenv("KANDINSKY_SECRET") is None:
             self.logger.warning("Error while getting auth keys from .env file. check it")
 
         self.logger.info("Kandinsky task inited. Start pipeline getter")
