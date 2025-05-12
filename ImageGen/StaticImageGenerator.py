@@ -45,7 +45,7 @@ class StaticImageGenerator:
         self.logger.info(f"Start async generate task with prompt {self.__prompt_strings[prompt_id]}")
         kandinsky_task = KandinskyGenTask(self.__prompt_strings[prompt_id])
         result = await kandinsky_task.generate_image()
-        result.show()
+        self.__ready_images.append(result)
         return True
 
     async def __run_generations(self):
@@ -54,9 +54,10 @@ class StaticImageGenerator:
             coroutines.append(self.__generate_one_img(prompt))
         await asyncio.gather(*coroutines)
 
-    def start_image_generations(self):
+    def start_image_generations(self) -> list[Image]:
         asyncio.run(self.__run_generations())
         self.logger.info("End of generation")
+        return self.__ready_images
 
 
 
@@ -68,5 +69,7 @@ if __name__ == "__main__":
     generator.add_prompt("Рассвет над окопами, алый свет зари окрашивает снег. Солдат сжимает винтовку, на его шинели — значок ВКП(Б). Рядом товарищи готовятся к атаке, лица напряжены. Вдали дым и огонь боя. На лице главного героя — последняя мысль о доме перед рывком. Стиль: динамичная батальная сцена в духе советского военного плаката, резкие тени, кроваво-красное небо.")
     generator.add_prompt('Крупный план рук солдата, крепко сжимающих карандаш и листок с недописанными словами. Второй лист уже вложен в конверт с надписью «Моей семье». На заднем плане — звук сирены, бойцы поднимаются в атаку. В глазах солдата — слеза, но губы сжаты в решимости. Стиль: эмоциональный гиперреализм, акцент на деталях: дрожь руки, помятая бумага, тусклый свет утра.')
     generator.add_prompt('Альтернативная реальность (метафора жертвы)')
-    generator.start_image_generations()
+    res = generator.start_image_generations()
     print(f"time = {time.time() - start_time}")
+    for i in res:
+        i.show()
