@@ -2,3 +2,10 @@ openai
 Pillow
 python-dotenv
 aiohttp
+openai
+google-genai
+requests
+google
+google-api-core
+google-generativeai
+pysocks
