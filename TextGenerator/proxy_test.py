@@ -17,7 +17,7 @@ proxies = {
 }
 
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
-params = {"key": "api_key"}
+params = {"key": "api"}
 payload = {
     "contents": [{
         "parts": [{
