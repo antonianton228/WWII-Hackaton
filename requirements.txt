@@ -12,3 +12,5 @@ google-generativeai
 pysocks
 speechkit
 python-dotenv
+fastapi
+uvicorn

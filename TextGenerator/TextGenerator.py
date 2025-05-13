@@ -10,14 +10,13 @@ load_dotenv()
 logging.basicConfig(encoding='utf-8', level=logging.DEBUG)  # логгер
 
 class TextGenerator:
-
-
     def __init__(self):
         self.api_key = os.getenv('GEMINI_API')
         self.url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
         self.logger = logging.getLogger(__name__)  # Логгер
         self.proxies = "socks5://localhost:1080"
         self.config_path = 'proxy_config.json'
+        self.is_xray_started = False
 
         if not self.api_key:
             self.logger.error("GEMINI_API not found in environment variables")
@@ -42,6 +41,7 @@ class TextGenerator:
                 raise RuntimeError(f"Xray failed to start: {stderr.decode()}")
 
             self.logger.info("Xray proxy started successfully")
+            self.is_xray_started = True
             return process
 
         except Exception as e:
@@ -53,63 +53,27 @@ class TextGenerator:
     def _create_prompt(self, letter_text):
         self.logger.debug("Creating prompt for letter analysis")
         return f'''
-Ниже дан текст письма времён Великой Отечественной войны—
-{letter_text}.
+Ниже дан текст фронтового письма:
+{letter_text}
 
-Твоя задача—сформировать один JSON‑объект, строго в указанном формате, выполнив четыре шага.        
-        
-        
+Выполни три шага и верни **только** JSON.
 
-1. Определи пол автора
-0—мужчина, 1—женщина.
+1. "sex" — 0 (мужчина) или 1 (женщина).
+2. "original_text" — письмо с исправленной орфографией и ударением: в каждом слове (кроме односложных) поставь «+» перед ударной гласной.
+3. "frames" — массив подробных сцен для Kandinsky. 
+   • Используй описание атмосферы, персонажей, эмоций, времени суток, цвета.  
+   • **Не** ставь «+» в `frames`.
 
-Запиши значение в поле "sex".
+Формат вывода:
 
-2. Сцены (кадры) для Kandinsky
-Разбей письмо на логические сцены.
-
-Для каждой сцены создай подробный промпт для генеративной нейросети Kandinsky (описание обстановки, персонажей, эмоций, времени суток, цветовой гаммы и т.д.).
-
-Помести все промпты в массив "frames" (порядок сцен соответствует порядку письма).
-
-3. Обработанный текст письма
-Запиши отредактированный текст в строку "original_text", соблюдая два правила:
-
-Ударения.
-В каждом слове (кроме односложных) поставь знак «+» сразу перед ударной гласной. При выставлении ударных гласных пользуйся 
-правилами современного русского языка. Для постановки ударения смотри в словари. 
-В промптах для генерации изображений ударения расставлять не нужно. Удостоверься, что 
-ударения стоят в соответствии с объяснениями, которые ты приведешь далее
-
-пример: солд+ат, дор+ога
-
-Орфография.
-Исправь орфографические ошибки, сохранив стиль письма.
-
-4. Объясни постановку ударения в каждом слове.
-Для этого в строке "rules" создай ещё один JSON объект, в котором ключи - это слова,
-а значения - это правила, в соответствии с которыми ты поставил ударения.
-
-Итоговый вывод ― только JSON
-Формат строго такой (никакого дополнительного текста вокруг!):
-
-{'{'}
+{"{"}
   "sex": 0,
   "frames": [
     "подробный промпт 1",
     "подробный промпт 2"
   ],
-  "original_text": "текст с удар+ениями и **акцентами**",
-  "rules": {'}'}
-    "слово с ударением": "Объяснение постановки ударения",
-    "слово с ударением": "Объяснение постановки ударения",
-    "слово с ударением": "Объяснение постановки ударения"
-  {'}'}
-{'}'}
-Важно:
-• Ударение ставится во всех словоформах, включая служебные, если они не односложные.
-• Символ «+» не отделяй пробелами от буквы.
-• Используй русские гласные: а, е, ё, и, о, у, ы, э, ю, я.'''
+  "original_text": "текст с удар+ениями"
+{"}"}'''
 
 
 
@@ -141,6 +105,8 @@ class TextGenerator:
 
     #prompt analyzer
     async def analyze_letter(self, letter_text):
+        if not self.is_xray_started:
+            await self.start_xray_proxy()
         try:
             self.logger.info(f"Starting analysis for letter: {letter_text[:50]}...")
             prompt = self._create_prompt(letter_text)
