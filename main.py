@@ -7,6 +7,7 @@ from TextGenerator.TextGenerator import TextGenerator
 from pprint import pprint
 
 
+
 async def main():
     geminuRequester = TextGenerator()
     await geminuRequester.start_xray_proxy()
@@ -29,11 +30,13 @@ async def main():
             break
         time.sleep(2)
     ## Представим, что достучались, фронт об этом узнал и показывает картинки, метод закончен
+    print(image_generator.get_image_list())
     for img in image_generator.get_image_list():
         img.show()
 
 
     ## теперь голос
+
     voice_generator = SpeechGenerator(genemi_result["original_text"], genemi_result["sex"])
     voice_bytes = voice_generator.generate_voice()
     # Дальше только монтаж, для примера сохраню голос в файл (на бэке этого не будет)

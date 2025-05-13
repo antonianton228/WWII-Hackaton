@@ -39,7 +39,7 @@ class KandinskyGenTask:
         self.logger.info("Kandinsky task inited. Start pipeline getter")
 
     def get_image(self) -> Image:
-        return self.result_image
+        return self.__result_image
 
     async def is_ready(self) -> bool:
         await self.__get_result()
@@ -82,7 +82,7 @@ class KandinskyGenTask:
                     base_64_coded_file = base64.b64decode(base_64_coded_file)
                     buffer = io.BytesIO(base_64_coded_file)
                     img_pil = Image.open(buffer)
-                    self.result_image = img_pil
+                    self.__result_image = img_pil
                     self.__is_ready = True
 
     async def generate_image(self):
