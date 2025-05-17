@@ -26,7 +26,8 @@ class KandinskyGenTask:
 
         self.image_id = None
 
-        self.__result_image = None
+        self.__result_images: list[Image] = []
+        self.__result_images_base_64: list[str] = []
         self.__is_ready = False
 
         self.AUTH_HEADERS = {
@@ -38,8 +39,11 @@ class KandinskyGenTask:
 
         self.logger.info("Kandinsky task inited. Start pipeline getter")
 
-    def get_image(self) -> Image:
-        return self.__result_image
+    def get_image(self, picked_id: int) -> Image:
+        return self.__result_images[picked_id]
+
+    def get_image_base_64(self, picked_id: int) -> str:
+        return self.__result_images_base_64[picked_id]
 
     async def is_ready(self) -> bool:
         await self.__get_result()
@@ -62,7 +66,9 @@ class KandinskyGenTask:
         async with aiohttp.ClientSession() as session:
             async with session.post(self.URL + 'key/api/v1/pipeline/run', headers=self.AUTH_HEADERS, data=request_data) as response:
                 self.logger.info("Image generation task ended")
-                self.image_id = (await response.json())['uuid']
+                response = await response.json()
+                self.logger.info(f"Kandinsky api response: {response}")
+                self.image_id = response['uuid']
 
 
     async def __get_result(self): # Вернет None, если генерация не завершена
@@ -78,11 +84,13 @@ class KandinskyGenTask:
                     return
                 elif data['status'] == 'DONE':
                     self.logger.info(f"File generated")
-                    base_64_coded_file = data['result']['files'][0]
-                    base_64_coded_file = base64.b64decode(base_64_coded_file)
-                    buffer = io.BytesIO(base_64_coded_file)
-                    img_pil = Image.open(buffer)
-                    self.__result_image = img_pil
+                    for image_base_64 in data['result']['files']:
+                        base_64_coded_file = image_base_64
+                        self.__result_images_base_64.append(image_base_64)
+                        base_64_coded_file = base64.b64decode(base_64_coded_file)
+                        buffer = io.BytesIO(base_64_coded_file)
+                        img_pil = Image.open(buffer)
+                        self.__result_images.append(img_pil)
                     self.__is_ready = True
 
     async def generate_image(self):

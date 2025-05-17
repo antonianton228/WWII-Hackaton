@@ -1,6 +1,9 @@
 import asyncio
 import time
 
+import uvicorn
+
+from FastApiApplication.Application import Application
 from ImageGen.StaticImageGenerator import StaticImageGenerator
 from SpeechGenerator.SpeechGenerator import SpeechGenerator
 from TextGenerator.TextGenerator import TextGenerator
@@ -34,7 +37,6 @@ async def main():
     for img in image_generator.get_image_list():
         img.show()
 
-
     ## теперь голос
 
     voice_generator = SpeechGenerator(genemi_result["original_text"], genemi_result["sex"])
@@ -45,5 +47,14 @@ async def main():
 
 
 
+# if __name__ == "__main__":
+#     asyncio.run(main())
 if __name__ == "__main__":
-    asyncio.run(main())
+    app = Application()
+    uvicorn.run(
+        app.app,  # передаём сюда свойство app
+        host="0.0.0.0",
+        port=8001,
+        reload=False,
+        access_log=True,
+    )

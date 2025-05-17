@@ -27,12 +27,15 @@ class StaticImageGenerator:
 
         self.logger.info("Static image generator inited")
 
+        self.__picked_images: list[int] = []
+
     def get_prompt_count(self) -> int:
         return len(self.__prompt_strings)
 
     def add_prompt(self, new_prompt: str) -> None:
         self.__prompt_strings.append(new_prompt)
         self.logger.info(f"Prompt with index {self.get_prompt_count() - 1} added")
+        self.__picked_images.append(0)
 
     def edit_prompt(self, prompt_id: int, new_prompt_text: str) -> bool:
         if self.get_prompt_count()  > prompt_id:
@@ -65,8 +68,14 @@ class StaticImageGenerator:
 
     def get_image_list(self) -> list[Image]:
         img_list = []
-        for task in self.__started_tasks:
-            img_list.append(task.get_image())
+        for task_id in range(len(self.__started_tasks)):
+            img_list.append(self.__started_tasks[task_id].get_image(picked_id=self.__picked_images[task_id]))
+        return img_list
+
+    def get_image_list_base_64(self) -> list[str]:
+        img_list = []
+        for task_id in range(len(self.__started_tasks)):
+            img_list.append(self.__started_tasks[task_id].get_image_base_64(picked_id=self.__picked_images[task_id]))
         return img_list
 
     async def start_image_generations(self):
